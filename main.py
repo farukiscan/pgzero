@@ -12,7 +12,7 @@ mushroom_count = 0
 
 music_muted = False
 frame_index = 0
-mushroom_count = 0
+
 music.play("bgmusic")
 tree_collide = Rect(913,420, 942-913, 638-226)
 platforms1 = [
@@ -106,6 +106,7 @@ def draw():
         shroom2.draw()
         screen.blit("climb", (0, 0))
         screen.blit("door1",(0,0))
+        sounds.mosquito.play()
        
         beetle.draw()
         beetle2.draw()
@@ -113,6 +114,7 @@ def draw():
         
 
     elif state == "lvl2":
+        sounds.mosquito.stop()
         screen.clear()
         screen.blit("background2", (0, 0))
         screen.blit("midground2", (0,0))
@@ -137,7 +139,6 @@ def draw():
     
 def update():
     global moving_platform, platform_direction,mushroom_count,player_rect, state, moving_platformm
-    
     
     moving_platform.x += platform_speed * platform_direction
     moving_platformm.x += 2 * platform_direction
@@ -170,12 +171,17 @@ def update():
     player.state = "walk" if moved else "idle"
 
     if player.state == "walk":
+        
         player.timer += 1
         if player.timer >= 10:
+
             player.timer = 0
             player.frame_index = (player.frame_index + 1) % player.frame_count
             player.actor.image = f"{player.name}walk{player.direction}00{player.frame_index}"
 
+
+        
+    
     if player.state == "idle":
         player.timer += 1
         if player.timer >= 10:
@@ -187,11 +193,17 @@ def update():
         player.state = "idle"
      
     if player.actor.colliderect(shroom1_rect) and state == "lvl1":
+        sounds.mosquito.stop()
+        sounds.toggle.play()
+        sounds.mosquito.play()
         mushroom_count += 1
         shroom1.image = "foreground(1)"
         shroom1_rect.x = -100
         shroom1_rect.y = -100
     if player.actor.colliderect(shroom2_rect) and state == "lvl1":
+        sounds.mosquito.stop()
+        sounds.toggle.play()
+        sounds.mosquito.play()
         mushroom_count += 1
         shroom2.image = "foreground(2)"
         shroom2_rect.x = -100
@@ -215,18 +227,24 @@ def update():
         star2_rect.y = -100
 
     if player_rect.colliderect(door11) and mushroom_count == 2 and state == "lvl1":
-        sounds.toggle.play()
+        sounds.mosquito.stop()
+        sounds.door_open.play()
         state = "lvl2"
         player.actor.x = 144
         player.actor.y = 63
 
     if player_rect.colliderect(exit) and mushroom_count == 4 and state == "lvl2":
         state = "win"
+        sounds.game_win.play()
 
     if (player_rect.colliderect(beetle_rect) or player_rect.colliderect(beetle2_rect)) and state == "lvl1":
+        sounds.mosquito.stop()
+        sounds.error.play()
         state = "gameover"
         
     if player.actor.y > HEIGHT and (state == "lvl1" or state == "lvl2"):
+        sounds.mosquito.stop()
+        sounds.error.play()
         state = "gameover"
 
 
@@ -286,6 +304,12 @@ def on_mouse_down(pos):
             player.actor.y = 63
             player.vel_y = 0
             player.on_ground = True
+            star1.image = "star1"
+            star1_rect.x = 307
+            star1_rect.y = 365
+            star2.image = "star2"
+            star2_rect.x = 1138
+            star2_rect.y = 46
 
         elif Rect(640-48, 250+60+10, 96, 96).collidepoint(pos):
             sounds.select.play()
@@ -323,7 +347,7 @@ def on_mouse_down(pos):
             shroom2.image = "shroom2"
             shroom2_rect.x = 969
             shroom2_rect.y = 502
-
+            
 def on_key_down(key):
     global state,moved
     if state == "lvl1" or state == "lvl2" or state == "gameover":
